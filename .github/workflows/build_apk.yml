@@ -1,42 +1,51 @@
-name: Build Kivy APK
+# .github/workflows/build.yml
+
+name: Build Kivy APK with Buildozer
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ "main" ] # Runs on push to the main branch
+  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
 
 jobs:
-  build:
-    runs-on: ubuntu-20.04
+  build-android:
+    runs-on: ubuntu-latest # Use a Linux runner
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip python3-setuptools git zip unzip openjdk-17-jdk libffi-dev libssl-dev libjpeg-dev libpng-dev
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-      - name: Install Buildozer & Cython
+      - name: Decode Keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
         run: |
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.33
+          echo $KEYSTORE_B64 | base64 --decode > my-release-key.keystore
 
-      - name: Accept Android SDK licenses
+      - name: Install dependencies
         run: |
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          yes | sdkmanager --licenses || true
+          python -m pip install --upgrade pip
+          pip install buildozer cython==0.29.34 # Pin Cython for stability
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
 
-      - name: Initialize Buildozer if missing
+      - name: Set up buildozer environment variables
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS_PASSWORD: ${{ secrets.KEY_ALIAS_PASSWORD }}
         run: |
-          if [ ! -f buildozer.spec ]; then
-            buildozer init
-          fi
-
-      - name: Build APK
+          echo "BUILDOZER_RELEASE_SIGNING_KEYSTORE_FILE=$(pwd)/my-release-key.keystore" >> $GITHUB_ENV
+          echo "BUILDOZER_RELEASE_SIGNING_KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}" >> $GITHUB_ENV
+          echo "BUILDOZER_RELEASE_SIGNING_KEY_ALIAS=mykeyalias" >> $GITHUB_ENV
+          echo "BUILDOZER_RELEASE_SIGNING_KEY_PASSWORD=${KEY_ALIAS_PASSWORD}" >> $GITHUB_ENV
+          
+      - name: Build with Buildozer
         run: |
-          export BUILDOZER_ACCEPT_LICENSE=1
-          buildozer --verbose android debug
+          buildozer -v android release
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v3
