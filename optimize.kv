@@ -1,0 +1,1294 @@
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import colors kivymd.color_definitions.colors
+#:import dp kivy.metrics.dp
+
+<CustomListItem>:
+    IconLeftWidget:
+        icon: root.icon
+        theme_text_color: "Custom"
+        text_color: app.theme_cls.primary_color
+
+<ScheduleCard>:
+    name: ""
+    time: ""
+    subject: ""
+    description: ""
+    has_notification: False
+    schedule_data: {}
+    size_hint_y: None
+    height: dp(70)
+    radius: [10]
+    elevation: 0
+    padding: 0
+    md_bg_color: (0.937, 0.964, 1, 1) if root.is_done else (0.85, 1, 0.85, 1)  # ✅ #EFF6FF vs light green
+    ripple_behavior: True
+    adaptive_height: True
+
+    canvas.before:
+        Color:
+            rgba: app.theme_cls.primary_color
+        RoundedRectangle:
+            pos: self.x-6, self.y
+            size: self.width, self.height
+            radius: [10]
+
+    MDBoxLayout:
+        orientation: "horizontal"
+        spacing: dp(10)
+        padding: [dp(10), dp(10), dp(16), dp(10)]
+
+        # LEFT SIDE: TIME + BELL
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_x: None
+            width: dp(85)
+            spacing: dp(6)
+
+            MDLabel:
+                text: root.time
+                font_style: "H6"
+                halign: "center"
+                theme_text_color: "Custom"
+
+            MDIcon:
+                icon: "bell-ring"
+                halign: "center"
+                size_hint: None, None
+                size: dp(20), dp(20)
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.primary_color
+                opacity: 1 if root.has_notification else 0
+
+        # RIGHT SIDE: TITLE + DETAILS
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: dp(4)
+
+            MDLabel:
+                text: root.name
+                font_style: "H6"
+                bold: True
+                halign: "center"
+                theme_text_color: "Custom"
+
+            MDLabel:
+                text: f"{root.subject} • {root.description}"
+                font_style: "Body2"
+                halign: "center"
+                theme_text_color: "Hint" if app.theme_cls.theme_style == 'Light' else "Custom"
+                max_lines: 2
+                shorten: False
+                bold: True
+
+
+
+
+
+<TaskCard>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: dp(170)
+    padding: dp(30)
+    spacing: dp(5)
+    md_bg_color: get_color_from_hex("#DBDBDB")
+    radius: [dp(12),]
+    
+    MDBoxLayout:
+        orientation: "horizontal"
+        spacing: dp(10)
+        
+        MDIconButton:
+            icon: root.icon
+            theme_text_color: "Custom"
+            text_color: app.theme_cls.primary_color if root.status != "Done" else get_color_from_hex("#4CAF50")
+            pos_hint: {"center_y": 0.5}
+        
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: dp(4)
+            
+            MDLabel:
+                text: root.name
+                font_style: "H6"
+                bold: True
+                theme_text_color: "Primary"
+                adaptive_height: True
+            
+            MDLabel:
+                text: "Due: " + root.due_date
+                font_style: "Body2"
+                theme_text_color: "Secondary"
+                adaptive_height: True
+            
+            MDLabel:
+                text: "Type: " + root.task_type
+                font_style: "Caption"
+                theme_text_color: "Secondary"
+                adaptive_height: True
+    
+    MDSeparator:
+        height: dp(1)
+    
+    MDBoxLayout:
+        orientation: "horizontal"
+        adaptive_height: True
+        
+        MDLabel:
+            text: root.description
+            font_style: "Body1"
+            theme_text_color: "Secondary"
+            size_hint_y: None
+            height: self.texture_size[1]
+            shorten: True
+            shorten_from: "right"
+            halign: "left"
+            pos_hint: {"center_y": 0.5}
+            opacity: 1 if root.description else 0
+
+        
+        MDCheckbox:
+            id: checkbox
+            active: root.status == "Done"
+            on_active: app.task_status_changed(root, self.active)
+            size_hint_x: None
+            width: dp(40)
+            pos_hint: {"center_y": 0.5}
+
+<StatusMenuItem>:
+    text: root.text
+    IconLeftWidget:
+        icon: root.icon
+        theme_text_color: "Custom"
+        text_color: app.theme_cls.primary_color
+
+<StreakCard>:
+    orientation: "vertical"
+    size_hint: None, None
+    size: dp(280), dp(150)
+    padding: dp(20)
+    spacing: dp(10)
+    md_bg_color: get_color_from_hex("#E3F2FD")
+    radius: [dp(15),]
+    
+    MDLabel:
+        text: "Current Streak"
+        font_style: "H6"
+        halign: "center"
+        theme_text_color: "Primary"
+    
+    MDLabel:
+        text: str(root.current_streak) + " days"
+        font_style: "H4"
+        halign: "center"
+        theme_text_color: "Primary"
+        bold: True
+    
+    MDLabel:
+        text: "Keep it going!"
+        font_style: "Subtitle1"
+        halign: "center"
+        theme_text_color: "Secondary"
+
+<MainButton@MDRectangleFlatButton>:
+    size_hint: None, None
+    size: dp(250), dp(48)
+    pos_hint: {"center_x": 0.5}
+    line_color: app.theme_cls.primary_color
+    text_color: app.theme_cls.primary_color
+    md_bg_color: get_color_from_hex("#E3F2FD")
+    radius: [dp(24),]
+    padding: [dp(10), dp(10)]
+    font_size: dp(14)
+
+<AppActionButton@MDRaisedButton>:
+    size_hint: None, None
+    size: dp(120), dp(40)
+    md_bg_color: app.theme_cls.primary_color
+    radius: [dp(20),]
+    font_size: dp(14)
+
+ScreenManager:
+    id: screen_manager
+    transition: FadeTransition()
+    
+    MainScreen:
+        name: "main_screen"
+    
+    ScheduleScreen:
+        name: "schedule_screen"
+    
+    TasksScreen:
+        name: "tasks_screen"
+    
+    ProfileScreen:
+        name: "profile_screen"
+    
+    AddScheduleScreen:
+        name: "add_schedule_screen"
+    
+    AddTaskScreen:
+        name: "add_task_screen"
+    
+    StatsScreen:
+        name: "stats_screen"
+
+<MainScreen>:
+    name: "main_screen"
+
+    MDFloatLayout:
+
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint: 1, 1
+            pos_hint: {"top": 1}
+
+            MDTopAppBar:
+                title: "Study Planner"
+                md_bg_color: app.theme_cls.primary_color
+                specific_text_color: get_color_from_hex("#FFFFFF")
+                elevation: 0
+                left_action_items: [["menu", lambda x: nav_drawer.set_state("open")]]
+
+            ScrollView:
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(25)
+                    padding: [dp(20), dp(30), dp(20), dp(20)]
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    MDLabel:
+                        text: "Hello, " + (app.profile_name if hasattr(app, 'profile_name') else "User") + "!"
+                        font_style: "H5"
+                        halign: "left"
+                        theme_text_color: "Primary"
+                        bold: True
+
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(78)
+            padding: [dp(8), dp(0)]
+            spacing: dp(0)
+            pos_hint: {"x": 0, "y": 0}
+            md_bg_color: get_color_from_hex("#FFFFFF")
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 0.08
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "home"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "main_screen"
+                MDLabel:
+                    text: "Home"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "clipboard-list"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "schedule_screen"
+                MDLabel:
+                    text: "Schedule"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "check-circle-outline"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "tasks_screen"
+                MDLabel:
+                    text: "Tasks"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "book-open-page-variant"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "stats_screen"
+                MDLabel:
+                    text: "Subjects"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "account"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "profile_screen"
+                MDLabel:
+                    text: "Profile"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+
+<ScheduleScreen>:
+    name: "schedule_screen"
+
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: dp(8)
+
+        # Top bar
+        MDBoxLayout:
+            size_hint_y: None
+            height: self.minimum_height
+            spacing: dp(10)
+            padding: dp(16), dp(16), dp(16), 0
+
+            MDLabel:
+                text: "Schedules"
+                font_style: "H5"
+                bold: True
+                size_hint_x: 0.7
+
+            MDRaisedButton:
+                text: "+ Add Schedule"
+                md_bg_color: app.theme_cls.primary_color
+                text_color: 1,1,1,1
+                on_release: root.add_schedule()
+                size_hint_x: None
+                width: dp(110)
+                height: dp(36)
+                elevation: 0
+            
+
+        ScrollView:
+            id: schedule_scroll
+            scroll_type: ['bars', 'content']
+            bar_width: dp(3)
+            bar_color: app.theme_cls.primary_color
+            effect_cls: "ScrollEffect"  # for subtle bounce
+
+            MDBoxLayout:
+                orientation: "vertical"
+                padding: "16dp"
+                spacing: "16dp"
+                size_hint_y: None
+                height: self.minimum_height
+
+                # ⬛ WEEK CARD
+                MDCard:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    padding: "20dp"
+                    spacing: "30dp"
+                    radius: [16, 16, 16, 16]
+                    elevation: 0
+                    line_color: (190/255, 190/255, 190/255, 1)
+                    line_width: dp(0.5) 
+
+                    MDLabel:
+                        text: "This Week"
+                        font_style: "H6"
+                        theme_text_color: "Primary"
+
+                    MDLabel:
+                        id: week_range
+                        text: ""
+                        font_style: "Body2"
+                        theme_text_color: "Secondary"
+
+                    ScrollView:
+                        bar_width: 0
+                        size_hint_y: None
+                        height: dp(100)
+                        MDBoxLayout:
+                            id: week_strip
+                            orientation: "horizontal"
+                            spacing: "10dp"
+                            padding: "5dp"
+                            adaptive_width: True
+
+                MDCard:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    padding: "20dp"
+                    spacing: "30dp"
+                    radius: [16, 16, 16, 16]
+                    elevation: 0
+                    line_color: (190/255, 190/255, 190/255, 1)
+                    line_width: dp(0.5) 
+
+                    # ⬛ TODAY’S SCHEDULE HEADER
+                    MDLabel:
+                        id: schedule_label
+                        text: "Today's Schedule"
+                        font_style: "H6"
+                        theme_text_color: "Primary"
+                        size_hint_y: None
+                        height: self.texture_size[1]
+
+
+                    # ⬛ SCHEDULE LIST
+                    MDBoxLayout:
+                        id: schedule_list
+                        orientation: "vertical"
+                        spacing: "12dp"
+                        adaptive_height: True
+
+
+
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(78)
+            padding: [dp(8), dp(0)]
+            spacing: dp(0)
+            pos_hint: {"x": 0, "y": 0}
+            md_bg_color: get_color_from_hex("#FFFFFF")
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 0.08
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "home"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "main_screen"
+                MDLabel:
+                    text: "Home"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "clipboard-list"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "schedule_screen"
+                MDLabel:
+                    text: "Schedule"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "check-circle-outline"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "tasks_screen"
+                MDLabel:
+                    text: "Tasks"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "book-open-page-variant"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "stats_screen"
+                MDLabel:
+                    text: "Subjects"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "account"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "profile_screen"
+                MDLabel:
+                    text: "Profile"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+
+<TasksScreen>:
+    name: "tasks_screen"
+    
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: [0, dp(10), 0, 0]
+        
+        MDTopAppBar:
+            title: "My Tasks"
+            md_bg_color: app.theme_cls.primary_color
+            specific_text_color: get_color_from_hex("#FFFFFF")
+            elevation: 0
+            left_action_items: [["arrow-left", lambda x: root.go_back()]]
+            right_action_items: [["plus", lambda x: root.add_task()]]
+        
+        MDTabs:
+            id: tabs
+            on_tab_switch: root.on_tab_switch(*args)
+
+            Tab:
+                text: "Daily"
+                icon: "calendar-today"
+
+                ScrollView:
+                    MDList:
+                        id: daily_tasks
+                        spacing: dp(10)
+                        padding: dp(10)
+
+            Tab:
+                text: "Weekly"
+                icon: "calendar-week"
+
+                ScrollView:
+                    MDList:
+                        id: weekly_tasks
+                        spacing: dp(10)
+                        padding: dp(10)
+
+            Tab:
+                text: "Monthly"
+                icon: "calendar-month"
+
+                ScrollView:
+                    MDList:
+                        id: monthly_tasks
+                        spacing: dp(10)
+                        padding: dp(10)
+
+<ProfileScreen>:
+    name: "profile_screen"
+
+    MDFloatLayout:
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint: 1, 1
+
+            MDTopAppBar:
+                title: "Profile"
+                md_bg_color: app.theme_cls.primary_color
+                specific_text_color: get_color_from_hex("#FFFFFF")
+                elevation: 0
+
+            ScrollView:
+                scroll_type: ['bars', 'content']
+                bar_width: dp(3)
+                bar_color: app.theme_cls.primary_color
+                effect_cls: "ScrollEffect"  # for subtle bounce
+
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: [dp(20), dp(20), dp(20), dp(100)]
+                    spacing: dp(20)
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: dp(160)
+                        spacing: dp(10)
+                        pos_hint: {"center_x": 0.5}
+
+                        FitImage:
+                            source: root.avatar_path
+                            size_hint: None, None
+                            size: dp(90), dp(90)
+                            pos_hint: {"center_x": 0.5}
+                            radius: [dp(50)]
+                            on_touch_down: root.choose_avatar() if self.collide_point(*args[1].pos) else None
+
+                        MDLabel:
+                            text: root.profile_name if hasattr(root, 'profile_name') else ""
+                            font_style: "H5"
+                            halign: "center"
+                            bold: True
+
+                        MDLabel:
+                            text: root.profile_title if hasattr(root, 'profile_title') else ""
+                            font_style: "Body1"
+                            halign: "center"
+                            theme_text_color: "Secondary"
+
+                    MDCard:
+                        orientation: "horizontal"
+                        size_hint: None, None
+                        size: dp(320), dp(80)
+                        pos_hint: {"center_x": 0.5}
+                        padding: dp(10)
+                        elevation: 0
+                        radius: [dp(12)]
+                        spacing: dp(10)
+                        line_color: (190/255, 190/255, 190/255, 1)
+                        line_width: dp(0.5)
+
+
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: dp(5)
+                            MDLabel:
+                                id: gpa_label
+                                text: str(app.gpa) if hasattr(app, 'gpa') else "N/A"
+                                halign: "center"
+                                theme_text_color: "Custom"
+                                text_color: get_color_from_hex("#3F51B5")
+                                font_style: "H5"
+                                bold: True
+                            MDLabel:
+                                text: "GPA"
+                                halign: "center"
+                                font_style: "Caption"
+
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: dp(5)
+                            MDLabel:
+                                id: tasks_done_label
+                                text: str(app.tasks_done) if hasattr(app, 'tasks_done') else "0"
+                                halign: "center"
+                                theme_text_color: "Custom"
+                                text_color: get_color_from_hex("#4CAF50")
+                                font_style: "H5"
+                                bold: True
+                            MDLabel:
+                                text: "Tasks Done"
+                                halign: "center"
+                                font_style: "Caption"
+
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: dp(5)
+                            MDLabel:
+                                id: study_hours_label
+                                text: str(app.study_hours) if hasattr(app, 'study_hours') else "0"
+                                halign: "center"
+                                theme_text_color: "Custom"
+                                text_color: get_color_from_hex("#9C27B0")
+                                font_style: "H5"
+                                bold: True
+                            MDLabel:
+                                text: "Study Hours"
+                                halign: "center"
+                                font_style: "Caption"
+
+                    MDCard:
+                        orientation: "vertical"
+                        size_hint: None, None
+                        size: dp(320), dp(200)
+                        pos_hint: {"center_x": 0.5}
+                        elevation: 0
+                        radius: [dp(12)]
+                        line_color: (190/255, 190/255, 190/255, 1)
+                        line_width: dp(0.5)
+
+                        OneLineIconListItem:
+                            text: "Edit Profile"
+                            on_release: root.edit_profile()
+                            IconLeftWidget:
+                                icon: "account-outline"
+
+                        OneLineIconListItem:
+                            text: "Notifications"
+                            on_release: root.open_notification_settings()
+                            IconLeftWidget:
+                                icon: "bell-outline"
+
+                        OneLineIconListItem:
+                            text: "Calendar Settings"
+                            IconLeftWidget:
+                                icon: "calendar-blank-outline"
+
+                        OneLineIconListItem:
+                            text: "App Settings"
+                            on_release: root.open_app_settings()
+                            IconLeftWidget:
+                                icon: "cog-outline"
+
+                    MDCard:
+                        orientation: "vertical"
+                        size_hint: None, None
+                        size: dp(320), dp(100)
+                        pos_hint: {"center_x": 0.5}
+                        elevation: 0
+                        radius: [dp(12)]
+                        line_color: (190/255, 190/255, 190/255, 1)
+                        line_width: dp(0.5)
+
+                        MDLabel:
+                            text: "Study Streak"
+                            font_style: "Subtitle1"
+                            halign: "center"
+
+                        MDIcon:
+                            icon: "fire"
+                            pos_hint: {"center_x":0.5, "center_y":0.5}
+                            theme_text_color: "Custom"
+                            text_color: get_color_from_hex("#FF5722")
+
+                        MDLabel:
+                            id: streak_label
+                            text: str(app.current_streak) + " Days"
+                            font_style: "H5"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: get_color_from_hex("#FF5722")
+                            bold: True
+
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(78)
+            padding: [dp(8), dp(0)]
+            spacing: dp(0)
+            pos_hint: {"x": 0, "y": 0}
+            md_bg_color: get_color_from_hex("#FFFFFF")
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 0.08
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "home"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "main_screen"
+                MDLabel:
+                    text: "Home"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "clipboard-list"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "schedule_screen"
+                MDLabel:
+                    text: "Schedule"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "check-circle-outline"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "tasks_screen"
+                MDLabel:
+                    text: "Tasks"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "book-open-page-variant"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "stats_screen"
+                MDLabel:
+                    text: "Subjects"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#9E9E9E")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_x: 1
+                spacing: dp(0)
+                padding: [0, dp(4)]
+                Widget:
+                    size_hint_y: None
+                    height: dp(2)
+                MDIconButton:
+                    icon: "account"
+                    icon_size: "24sp"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.manager.current = "profile_screen"
+                MDLabel:
+                    text: "Profile"
+                    halign: "center"
+                    font_style: "Caption"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+<AddScheduleScreen>:
+    name: "add_schedule_screen"
+    schedule_name: schedule_name
+    schedule_subject: schedule_subject
+    schedule_desc: schedule_desc
+    schedule_time: schedule_time
+    schedule_day: schedule_day
+    notification_toggle: notification_toggle
+    
+    MDBoxLayout:
+        orientation: "vertical"
+        
+        MDTopAppBar:
+            title: "Add Schedule"
+            md_bg_color: app.theme_cls.primary_color
+            specific_text_color: get_color_from_hex("#FFFFFF")
+            elevation: 0
+            left_action_items: [["arrow-left", lambda x: root.go_back()]]
+        
+        ScrollView:
+            MDBoxLayout:
+                orientation: "vertical"
+                spacing: dp(20)
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(20)
+                
+                MDTextField:
+                    id: schedule_name
+                    hint_text: "Schedule Name"
+                    icon_left: "format-title"
+                    mode: "rectangle"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                
+                MDTextField:
+                    id: schedule_subject
+                    hint_text: "Subject"
+                    icon_left: "book"
+                    mode: "rectangle"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                
+                MDTextField:
+                    id: schedule_desc
+                    hint_text: "Description"
+                    icon_left: "text"
+                    multiline: True
+                    mode: "rectangle"
+                    max_text_length: 15
+                    fill_color: get_color_from_hex("#E3F2FD")
+
+                MDTextField:
+                    id: schedule_day
+                    hint_text: "Schedule For"
+                    icon_left: "calendar"
+                    mode: "rectangle"
+                    readonly: True
+                    on_focus: if self.focus: root.show_day_menu()
+                
+                MDTextField:
+                    id: schedule_time
+                    hint_text: "Select Time"
+                    icon_left: "clock"
+                    mode: "rectangle"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                    on_focus: if self.focus: root.show_time_picker()
+                
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: dp(48)
+                    spacing: dp(10)
+                    padding: [dp(10), 0]
+                    
+                    MDIconButton:
+                        icon: "bell"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        pos_hint: {"center_y": 0.5}
+                    
+                    MDLabel:
+                        text: "Enable Notification"
+                        theme_text_color: "Primary"
+                        size_hint_x: 0.8
+                        pos_hint: {"center_y": 0.5}
+                    
+                    MDSwitch:
+                        id: notification_toggle
+                        active: True
+                        pos_hint: {"center_y": 0.5}
+                
+                MDRectangleFlatButton:
+                    text: "Save Schedule"
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.save_schedule()
+
+<AddTaskScreen>:
+    name: "add_task_screen"
+    task_name: task_name
+    task_desc: task_desc
+    task_date: task_date
+    task_type: task_type
+    task_status: task_status
+    
+    MDBoxLayout:
+        orientation: "vertical"
+        
+        MDTopAppBar:
+            title: "Add Task"
+            md_bg_color: app.theme_cls.primary_color
+            specific_text_color: get_color_from_hex("#FFFFFF")
+            elevation: 0
+            left_action_items: [["arrow-left", lambda x: root.go_back()]]
+        
+        ScrollView:
+            MDBoxLayout:
+                orientation: "vertical"
+                spacing: dp(12)
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(20)
+                
+                MDTextField:
+                    id: task_name
+                    hint_text: "Task Name"
+                    icon_left: "format-title"
+                    mode: "fill"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                
+                MDTextField:
+                    id: task_desc
+                    hint_text: "Task Description"
+                    icon_left: "text"
+                    multiline: True
+                    mode: "fill"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                
+                MDTextField:
+                    id: task_date
+                    hint_text: "Due Date"
+                    icon_left: "calendar"
+                    mode: "fill"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                    on_focus: if self.focus: root.show_date_picker()
+                
+                MDTextField:
+                    id: task_type
+                    hint_text: "Task Type"
+                    icon_left: "calendar-star"
+                    mode: "fill"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                    on_focus: if self.focus: root.show_task_type_menu()
+                
+                MDTextField:
+                    id: task_status
+                    hint_text: "Status"
+                    icon_left: "progress-check"
+                    mode: "fill"
+                    fill_color: get_color_from_hex("#E3F2FD")
+                    on_focus: if self.focus: root.show_status_menu()
+                
+                MDRectangleFlatButton:
+                    text: "Save Schedule"
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.save_task()
+
+<StatsScreen>:
+    name: "stats_screen"
+
+    MDBoxLayout:
+        orientation: "vertical"
+
+        MDTopAppBar:
+            title: "Study Statistics"
+            md_bg_color: app.theme_cls.primary_color
+            specific_text_color: get_color_from_hex("#FFFFFF")
+            elevation: 0
+            left_action_items: [["arrow-left", lambda x: root.go_back()]]
+
+        ScrollView:
+            MDBoxLayout:
+                orientation: "vertical"
+                padding: dp(20)
+                spacing: dp(20)
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDCard:
+                    id: streak_widget
+                    orientation: "vertical"
+                    size_hint: None, None
+                    size: dp(300), dp(180)
+                    elevation: 4
+                    pos_hint: {"center_x": 0.5}
+                    padding: dp(20)
+                    md_bg_color: get_color_from_hex("#E3F2FD")
+                    radius: [dp(15)]
+                
+                    MDLabel:
+                        text: "🔥 Current Streak"
+                        font_style: "H6"
+                        halign: "center"
+                        theme_text_color: "Primary"
+                
+                    MDLabel:
+                        id: streak_label
+                        text: str(app.current_streak) + " Days"
+                        font_style: "H3"
+                        halign: "center"
+                        bold: True
+                        theme_text_color: "Primary"
+                
+                    MDLabel:
+                        text: "Keep it up!"
+                        font_style: "Subtitle1"
+                        halign: "center"
+                        theme_text_color: "Secondary"
+                
+                MDCard:
+                    orientation: "vertical"
+                    size_hint: None, None
+                    size: dp(300), dp(120)
+                    elevation: 4
+                    pos_hint: {"center_x": 0.5}
+                    padding: dp(20)
+                    radius: [dp(15)]
+
+                    MDLabel:
+                        text: "✅ Task Completion"
+                        font_style: "Subtitle1"
+                        halign: "center"
+                        theme_text_color: "Primary"
+
+                    MDProgressBar:
+                        value: app.task_completion_percentage
+                        color: app.theme_cls.primary_color
+                        height: dp(8)
+                        pos_hint: {"center_x": 0.5}
+
+                    MDLabel:
+                        text: str(int(app.task_completion_percentage)) + "% Completed"
+                        font_style: "Caption"
+                        halign: "center"
+                        theme_text_color: "Secondary"
+
+                MDCard:
+                    orientation: "vertical"
+                    size_hint: None, None
+                    size: dp(300), dp(160)
+                    elevation: 4
+                    pos_hint: {"center_x": 0.5}
+                    padding: dp(20)
+                    radius: [dp(15)]
+                    md_bg_color: get_color_from_hex("#F3E5F5")
+
+                    MDLabel:
+                        text: "💡 Daily Tip"
+                        font_style: "Subtitle1"
+                        theme_text_color: "Primary"
+
+                    MDLabel:
+                        id: daily_tip
+                        text: "Tip will appear here"
+                        font_style: "Body1"
+                        theme_text_color: "Secondary"
+                        halign: "center"
+
+                MDCard:
+                    orientation: "vertical"
+                    size_hint: None, None
+                    size: dp(300), dp(160)
+                    elevation: 4
+                    pos_hint: {"center_x": 0.5}
+                    padding: dp(20)
+                    radius: [dp(15)]
+                    md_bg_color: get_color_from_hex("#FFF3E0")
+
+                    MDLabel:
+                        text: "📜 Daily Quote"
+                        font_style: "Subtitle1"
+                        theme_text_color: "Primary"
+
+                    MDLabel:
+                        id: daily_quote
+                        text: "Quote will appear here"
+                        font_style: "Body1"
+                        theme_text_color: "Secondary"
+                        halign: "center"
