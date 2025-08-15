@@ -1,0 +1,5 @@
+# requirements.txt
+kivy
+kivymd
+plyer
+pillow
